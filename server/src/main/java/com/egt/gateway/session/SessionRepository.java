@@ -16,12 +16,15 @@ import java.util.List;
 public class SessionRepository {
 
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    public List<String> getRequestIdsForSession(String sessionId) {
+
+    // A completed session is considered one where the response from the external-system is saved.
+    public List<String> getRequestIdsForCompletedSession(String sessionId) {
 
         var sql = """
                 SELECT request_id
                 FROM user_sessions
-                WHERE session_id = :session_id""";
+                WHERE session_id = :session_id 
+                AND api_response IS NOT null""";
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("session_id", sessionId);
