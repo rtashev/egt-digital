@@ -44,7 +44,7 @@ public class SessionService {
 
         insertSessionAndProduceEvent(userSessionEntity);
 
-        return sessionRepository.getRequestIdsForSession(sessionId);
+        return sessionRepository.getRequestIdsForCompletedSession(sessionId);
 
     }
 
