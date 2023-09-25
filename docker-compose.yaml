@@ -1,0 +1,61 @@
+version: "3.1"
+services:
+  db:
+    image: mysql
+    container_name: db
+    platform: linux/amd64
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3306:3306"
+    volumes:
+      - $HOME/mysql_docker:/var/lib/mysql
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+  kafka:
+    image: blacktop/kafka
+    container_name: kafka
+    ports:
+      - 2181:2181
+      - 9092:9092
+      - 9093:9093
+    environment:
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,INTERNAL://kafka:9093
+      - KAFKA_BROKER_ID=1
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:9093
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "9999:8080"
+    restart: always
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9093
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=kafka:2181
+    links:
+      - kafka
+  gateway-app:
+    image: etg/gateway-app
+    build:
+      dockerfile: buildAndRun.Dockerfile
+    container_name: gateway-app
+    ports:
+      - "8080:8080"
+    links:
+      - kafka
+      - db
+      - redis
+    depends_on:
+      - db
+      - redis
+      - kafka

@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: gateway
+  datasource:
+    url: "jdbc:mysql://${DB_HOST:db}:3306/gateway?serverTimezone=UTC&createDatabaseIfNotExist=true"
+    username: root
+    password: root
+  data:
+    redis:
+      host: ${REDIS_HOST:"redis"}
+      port: 6379
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:"kafka:9093"}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      compression-type: lz4
+      acks: all
+    consumer:
+      group-id: "${spring.application.name}-consumer-group"
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      max-poll-records: 1
+
+kafka:
+  producers:
+    topics:
+      session-events-topic:
+        name: session-events
+        partitions: 1
+        replicas: 2
+        retention-ms: 86400000 # 1 day
+  consumers:
+    #idle-between-polls-ms: 2000L
+    topics:
+      session-events-topic: session-events
+
+services:
+  external-serivce:
+    url: "https://catfact.ninja/fact"
+
+server:
+  error:
+    include-message: always
+    include-exception: true
+  forward-headers-strategy: framework
+
+# spring actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
